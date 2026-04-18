@@ -1,9 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Sparkles, BookOpen, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import aiTeacher from "@/assets/ai-teacher-hero.png";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const go = (focus?: "chat") => {
+    const dest = focus ? `/dashboard?focus=${focus}` : "/dashboard";
+    navigate(user ? dest : `/auth`);
+  };
+
   return (
     <main className="min-h-screen bg-background">
       <section className="container mx-auto px-6 py-16 md:py-24">
@@ -22,11 +32,11 @@ const Index = () => {
               one concept at a time.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" className="gap-2">
+              <Button size="lg" className="gap-2" onClick={() => go()}>
                 <BookOpen className="h-4 w-4" />
                 Start a lesson
               </Button>
-              <Button size="lg" variant="outline" className="gap-2">
+              <Button size="lg" variant="outline" className="gap-2" onClick={() => go("chat")}>
                 <MessageCircle className="h-4 w-4" />
                 Ask the teacher
               </Button>
