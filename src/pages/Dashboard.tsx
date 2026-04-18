@@ -86,7 +86,7 @@ const Dashboard = () => {
       .maybeSingle();
     setPlanLoading(false);
     if (data) {
-      setActivePlan(data as LessonPlan);
+      setActivePlan(data as unknown as LessonPlan);
       void loadMessages(data.id);
     } else {
       setActivePlan(null);
