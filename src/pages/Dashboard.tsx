@@ -128,7 +128,7 @@ const Dashboard = () => {
       setSubjGoals("");
       await loadSubjects();
       if (fnData.lesson_plan) {
-        setActivePlan(fnData.lesson_plan as LessonPlan);
+        setActivePlan(fnData.lesson_plan as unknown as LessonPlan);
         setMessages([]);
       }
     } catch (err: any) {
