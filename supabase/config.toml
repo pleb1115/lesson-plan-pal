@@ -1,0 +1,7 @@
+project_id = "rcdmnslzopaiwncmbbvr"
+
+[functions.generate-lesson-plan]
+verify_jwt = false
+
+[functions.tutor-chat]
+verify_jwt = false
