@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Youtube, ExternalLink } from "lucide-react";
 
 type Subject = { id: string; name: string };
 type Module = { title: string; summary: string; exercises: string[] };
@@ -405,6 +405,38 @@ const Dashboard = () => {
                 </ul>
               </Card>
             )}
+
+            {/* YouTube further learning */}
+            {(() => {
+              const subject = subjects.find((s) => s.id === activePlan.subject_id)?.name || "";
+              const queries = [
+                `${currentModule.title} ${subject} explained`,
+                `${currentModule.title} tutorial`,
+                `${currentModule.title} ${subject} examples`,
+              ];
+              return (
+                <div className="mt-6">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Youtube className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-semibold text-foreground">Watch on YouTube</p>
+                  </div>
+                  <div className="space-y-2">
+                    {queries.map((q, i) => (
+                      <a
+                        key={i}
+                        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-center justify-between rounded-xl border border-border bg-card p-3 transition-all hover:border-primary hover:shadow-sm"
+                      >
+                        <span className="truncate text-sm text-foreground">{q}</span>
+                        <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="mt-8 space-y-3">
               <Button size="lg" className="h-14 w-full gap-2 text-base font-semibold" onClick={openChat}>
