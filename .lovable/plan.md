@@ -1,55 +1,55 @@
 
-The user clicked "Start a lesson" and "Ask the teacher" — both are non-functional placeholders. Time to wire them up to the real classroom dashboard with Cloud auth, lesson generation, and chat (the roadmap we set earlier).
+The user wants a Duolingo-style experience: minimal on-screen elements, one clear next action at a time, less text, more focus. Currently the dashboard shows 3 dense panels simultaneously (sidebar + full lesson plan with all modules + chat) — overwhelming.
 
-## Plan: Wire up the buttons → full classroom dashboard
+## Plan: Duolingo-ify the experience
 
-### 1. Enable Lovable Cloud
-- Turn on Cloud for auth + database + AI gateway (no external keys needed).
+### 1. Landing page (`/`) — strip it down
+- Remove the long subheadline paragraph.
+- One headline, one button: **"Start learning"**.
+- Keep the AI teacher illustration, make it the focal point.
+- Drop the secondary "Ask the teacher" button (redundant — chat lives inside lessons).
 
-### 2. Auth
-- Add `/auth` page (email + password, with signup/login tabs, autoconfirm enabled).
-- Add a lightweight `useAuth` hook wrapping Supabase session.
-- Protect `/dashboard` — redirect to `/auth` if signed out.
+### 2. Dashboard (`/dashboard`) — single-focus flow
+Replace the 3-pane wall with a **step-by-step flow**, one screen at a time:
 
-### 3. Database (cloud-synced lessons + chat)
-- `subjects` (id, user_id, name, icon, created_at)
-- `lesson_plans` (id, user_id, subject_id, title, level, goals, modules jsonb, created_at)
-- `messages` (id, user_id, lesson_plan_id, role, content, created_at)
-- RLS: users only see their own rows.
-
-### 4. Routes & wire up the hero buttons
-- `/` (current landing) — "Start a lesson" → `/dashboard`, "Ask the teacher" → `/dashboard?focus=chat`. If signed out, both bounce through `/auth` first.
-- `/auth` — login / signup.
-- `/dashboard` — the Studio Loft classroom dashboard.
-
-### 5. Classroom dashboard (`/dashboard`)
 ```text
-┌────────────┬──────────────────────────┬─────────────┐
-│ Subjects   │   Active lesson plan      │  Chat       │
-│ + New      │   • Objectives            │  with       │
-│ Math       │   • Modules (expandable)  │  AI teacher │
-│ History    │   • Progress              │  [input]    │
-└────────────┴──────────────────────────┴─────────────┘
+Step 1: Pick subject        Step 2: Lesson path          Step 3: Module view
+┌──────────────────┐        ┌──────────────────┐         ┌──────────────────┐
+│  Your subjects   │        │   Linear Algebra │         │  Module 2 of 5   │
+│                  │        │                  │         │                  │
+│  [Math]    →     │   →    │  ✓ Module 1      │    →    │  Vectors         │
+│  [History] →     │        │  ● Module 2      │         │  [short summary] │
+│                  │        │  ○ Module 3      │         │                  │
+│  + New subject   │        │  ○ Module 4      │         │  [Chat with      │
+│                  │        │                  │         │   teacher] →     │
+└──────────────────┘        └──────────────────┘         └──────────────────┘
 ```
-- Left sidebar: list of user's subjects + "New subject" dialog (name + level + goals → generates a lesson plan).
-- Center: selected lesson plan with objectives, modules, and "mark complete" toggles.
-- Right: streaming chat scoped to the active lesson, persisted to `messages`.
 
-### 6. AI lesson generation + tutoring (edge functions)
-- `generate-lesson-plan`: takes `{ subject, level, goals }`, calls Lovable AI (`google/gemini-2.5-flash`) with structured output, returns `{ title, objectives[], modules[{title, summary, exercises[]}] }`, inserts into `lesson_plans`.
-- `tutor-chat`: takes `{ lesson_plan_id, message }`, loads plan + recent messages, streams tutor reply, persists both sides. Handles 429 (rate limit) and 402 (credits) with friendly toasts.
+- **Subjects screen**: Big tappable cards, one "+ New subject" CTA. No sidebar.
+- **Lesson path screen**: Vertical module list (Duolingo-style nodes: ✓ done / ● current / ○ locked-looking). One module is highlighted as "next up" with a single **"Start"** button.
+- **Module screen**: Title + 1-2 sentence summary + one primary button **"Chat with teacher about this"**. Exercises shown as a short collapsed list, not dumped on screen.
 
-### 7. Polish
-- Loading skeletons on dashboard panels.
-- Empty states ("Create your first subject to begin").
-- Toast on auth errors / AI errors.
-- Keep current landing page intact — just make the buttons go somewhere real.
+### 3. Chat — full-screen modal, not a side panel
+- Tap "Chat with teacher" → opens a focused full-screen chat (header shows current module, back arrow returns to module).
+- No competing UI. Just messages + input.
+- Suggested starter prompts as 2-3 chips ("Explain this", "Give me an example", "Quiz me") so the next action is obvious.
+
+### 4. New subject dialog — shorter
+- Just 1 field: **"What do you want to learn?"** (e.g. "Linear algebra for beginners").
+- Drop separate level/goals fields — let the AI infer or ask in chat.
+- One button: **"Create lesson"**.
+
+### 5. Navigation
+- Back button (top-left arrow) on every screen — never trap the user.
+- No persistent sidebar. Hierarchy: Subjects → Lesson → Module → Chat.
 
 ### Technical notes
-- Stack: existing React + Vite + Tailwind + shadcn, plus Lovable Cloud client auto-wired.
-- Streaming chat via `fetch` + `ReadableStream` reading SSE from the edge function.
-- Modules stored as `jsonb` so we can evolve shape without migrations.
-- No role/admin system needed yet — single-user-owned rows with `auth.uid() = user_id` RLS.
+- Add a local `view` state in `Dashboard.tsx`: `"subjects" | "lesson" | "module" | "chat"` driving which screen renders.
+- Track `activeModuleIndex` for the module screen.
+- Reuse existing `subjects`, `lesson_plans`, `messages` tables — no schema changes.
+- Module completion: add a simple `completed_modules` integer array on `lesson_plans` (small migration) so the path screen can show ✓/●/○.
+- Keep streaming chat logic, just render it in a full-screen layout.
+- Animate transitions between screens with a subtle slide (Tailwind `transition-transform`).
 
-### Out of scope (can follow up)
-- Quizzes/grading, voice mode, multi-student classrooms, sharing lesson plans.
+### Out of scope
+- Streaks, XP, hearts, leaderboards (can add later if you want the full Duolingo gamification).
