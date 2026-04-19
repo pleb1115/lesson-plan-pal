@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       lesson_plans: {
         Row: {
+          completed_modules: number[]
           created_at: string
           goals: string | null
           id: string
@@ -26,6 +27,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          completed_modules?: number[]
           created_at?: string
           goals?: string | null
           id?: string
@@ -36,6 +38,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          completed_modules?: number[]
           created_at?: string
           goals?: string | null
           id?: string
