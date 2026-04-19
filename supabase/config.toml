@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.tutor-chat]
 verify_jwt = false
+
+[functions.youtube-videos]
+verify_jwt = false
