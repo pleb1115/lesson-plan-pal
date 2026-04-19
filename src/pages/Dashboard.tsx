@@ -49,6 +49,10 @@ const Dashboard = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  type Video = { id: string; title: string; channel: string; url: string };
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [videosLoading, setVideosLoading] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) navigate("/auth", { replace: true });
   }, [user, loading, navigate]);
