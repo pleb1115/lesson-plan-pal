@@ -104,6 +104,28 @@ const Dashboard = () => {
   const openModule = (idx: number) => {
     setActiveModuleIndex(idx);
     setView("module");
+    void loadVideos(idx);
+  };
+
+  const loadVideos = async (idx: number) => {
+    if (!activePlan) return;
+    const mod = activePlan.modules[idx];
+    if (!mod) return;
+    const subjectName = subjects.find((s) => s.id === activePlan.subject_id)?.name || "";
+    const query = `${mod.title} ${subjectName}`.trim();
+    setVideosLoading(true);
+    setVideos([]);
+    try {
+      const { data, error } = await supabase.functions.invoke("youtube-videos", {
+        body: { query, limit: 4 },
+      });
+      if (error) throw error;
+      setVideos((data?.videos || []) as Video[]);
+    } catch (err) {
+      console.error("youtube fetch failed", err);
+    } finally {
+      setVideosLoading(false);
+    }
   };
 
   const openChat = async () => {
