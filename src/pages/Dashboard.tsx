@@ -432,37 +432,46 @@ const Dashboard = () => {
               </Card>
             )}
 
-            {/* YouTube further learning */}
-            {(() => {
-              const subject = subjects.find((s) => s.id === activePlan.subject_id)?.name || "";
-              const queries = [
-                `${currentModule.title} ${subject} explained`,
-                `${currentModule.title} tutorial`,
-                `${currentModule.title} ${subject} examples`,
-              ];
-              return (
-                <div className="mt-6">
-                  <div className="mb-2 flex items-center gap-2">
-                    <Youtube className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-semibold text-foreground">Watch on YouTube</p>
-                  </div>
-                  <div className="space-y-2">
-                    {queries.map((q, i) => (
-                      <a
-                        key={i}
-                        href={`https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center justify-between rounded-xl border border-border bg-card p-3 transition-all hover:border-primary hover:shadow-sm"
-                      >
-                        <span className="truncate text-sm text-foreground">{q}</span>
-                        <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-                      </a>
-                    ))}
-                  </div>
+            {/* YouTube further learning — real videos */}
+            <div className="mt-6">
+              <div className="mb-2 flex items-center gap-2">
+                <Youtube className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold text-foreground">Watch on YouTube</p>
+              </div>
+              {videosLoading ? (
+                <div className="space-y-2">
+                  {[0, 1, 2].map((i) => (
+                    <Skeleton key={i} className="h-20 w-full rounded-xl" />
+                  ))}
                 </div>
-              );
-            })()}
+              ) : videos.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No videos found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {videos.map((v) => (
+                    <a
+                      key={v.id}
+                      href={v.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-3 rounded-xl border border-border bg-card p-2 transition-all hover:border-primary hover:shadow-sm"
+                    >
+                      <img
+                        src={`https://i.ytimg.com/vi/${v.id}/mqdefault.jpg`}
+                        alt={v.title}
+                        loading="lazy"
+                        className="h-16 w-28 shrink-0 rounded-lg object-cover"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="line-clamp-2 text-sm font-medium text-foreground">{v.title}</p>
+                        <p className="mt-0.5 truncate text-xs text-muted-foreground">{v.channel}</p>
+                      </div>
+                      <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <div className="mt-8 space-y-3">
               <Button size="lg" className="h-14 w-full gap-2 text-base font-semibold" onClick={openChat}>
