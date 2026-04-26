@@ -516,14 +516,18 @@ const Dashboard = () => {
             </div>
 
             <div className="mt-8 space-y-3">
-              <Button size="lg" className="h-14 w-full gap-2 text-base font-semibold" onClick={openChat}>
+              {!activePlan.completed_modules?.includes(activeModuleIndex) ? (
+                <Button size="lg" className="h-14 w-full gap-2 text-base font-bold" onClick={startQuiz}>
+                  <Play className="h-5 w-5" /> Start lesson
+                </Button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 rounded-2xl bg-green-500/10 py-3 text-sm font-semibold text-green-600 dark:text-green-400">
+                  <Check className="h-4 w-4" /> Module complete
+                </div>
+              )}
+              <Button size="lg" variant="outline" className="h-12 w-full gap-2" onClick={openChat}>
                 Chat with teacher
               </Button>
-              {!activePlan.completed_modules?.includes(activeModuleIndex) && (
-                <Button size="lg" variant="outline" className="h-12 w-full" onClick={markComplete}>
-                  Mark complete
-                </Button>
-              )}
             </div>
           </div>
         )}
