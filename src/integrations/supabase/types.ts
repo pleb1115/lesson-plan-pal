@@ -93,6 +93,30 @@ export type Database = {
           },
         ]
       }
+      module_quizzes: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_plan_id: string
+          module_index: number
+          questions: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_plan_id: string
+          module_index: number
+          questions?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_plan_id?: string
+          module_index?: number
+          questions?: Json
+        }
+        Relationships: []
+      }
       subjects: {
         Row: {
           created_at: string
@@ -114,6 +138,39 @@ export type Database = {
           id?: string
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string
+          hearts: number
+          hearts_refilled_at: string
+          last_active_date: string | null
+          streak: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          hearts?: number
+          hearts_refilled_at?: string
+          last_active_date?: string | null
+          streak?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          hearts?: number
+          hearts_refilled_at?: string
+          last_active_date?: string | null
+          streak?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }
