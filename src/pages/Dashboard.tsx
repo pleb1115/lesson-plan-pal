@@ -301,22 +301,33 @@ const Dashboard = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
-        {view === "subjects" ? (
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold text-foreground">Your subjects</h1>
-          </div>
-        ) : (
+      <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
+        {view === "subjects" || view === "lesson" ? (
+          view === "subjects" ? (
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h1 className="font-semibold text-foreground">Your subjects</h1>
+            </div>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 -ml-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+          )
+        ) : view === "module" ? (
           <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 -ml-2">
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-        )}
-        {view === "subjects" && (
-          <Button variant="ghost" size="sm" onClick={signOut} className="gap-2">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        )}
+        ) : <div />}
+        <div className="flex items-center gap-2">
+          {(view === "subjects" || view === "lesson" || view === "module") && (
+            <StatsHeader stats={stats} />
+          )}
+          {view === "subjects" && (
+            <Button variant="ghost" size="sm" onClick={signOut} className="gap-2 ml-1">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="mx-auto max-w-xl px-6 py-8">
