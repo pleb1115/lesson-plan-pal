@@ -2,13 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useStats } from "@/hooks/useStats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Youtube, ExternalLink } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy } from "lucide-react";
+import { StatsHeader } from "@/components/StatsHeader";
+import { QuizScreen } from "@/components/QuizScreen";
+import { Confetti } from "@/components/Confetti";
+import { sfx } from "@/lib/sfx";
 
 type Subject = { id: string; name: string };
 type Module = { title: string; summary: string; exercises: string[] };
@@ -22,7 +27,7 @@ type LessonPlan = {
   completed_modules: number[];
 };
 type Message = { id: string; role: string; content: string; created_at: string };
-type View = "subjects" | "lesson" | "module" | "chat";
+type View = "subjects" | "lesson" | "module" | "chat" | "quiz" | "noHearts" | "moduleComplete";
 
 const SUGGESTIONS = ["Explain this", "Give me an example", "Quiz me"];
 
@@ -31,12 +36,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const { stats, loseHeart, awardXp } = useStats();
+
   const [view, setView] = useState<View>("subjects");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
   const [activePlan, setActivePlan] = useState<LessonPlan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [confettiTick, setConfettiTick] = useState(0);
+  const [lastReward, setLastReward] = useState<{ xp: number; correct: number; total: number } | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
@@ -139,8 +148,26 @@ const Dashboard = () => {
     setMessages((data || []) as Message[]);
   };
 
-  const markComplete = async () => {
+  const startQuiz = () => {
+    if (!stats || stats.hearts <= 0) {
+      setView("noHearts");
+      return;
+    }
+    sfx.tap();
+    setView("quiz");
+  };
+
+  const handleQuizPass = async (correctCount: number) => {
     if (!activePlan) return;
+    const total = 5;
+    const passed = correctCount >= 4;
+    if (!passed) {
+      setLastReward({ xp: 0, correct: correctCount, total });
+      toast({ title: "Almost there", description: `You got ${correctCount}/${total}. Try again to complete this module.` });
+      setView("module");
+      return;
+    }
+    const xp = 10 + correctCount * 5;
     const completed = Array.from(new Set([...(activePlan.completed_modules || []), activeModuleIndex]));
     const { error } = await supabase
       .from("lesson_plans")
@@ -151,7 +178,11 @@ const Dashboard = () => {
       return;
     }
     setActivePlan({ ...activePlan, completed_modules: completed });
-    setView("lesson");
+    await awardXp(xp);
+    setLastReward({ xp, correct: correctCount, total });
+    setConfettiTick((t) => t + 1);
+    sfx.complete();
+    setView("moduleComplete");
   };
 
   const handleCreateSubject = async (e: React.FormEvent) => {
@@ -270,22 +301,33 @@ const Dashboard = () => {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="flex items-center justify-between border-b border-border bg-card px-4 py-3">
-        {view === "subjects" ? (
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <h1 className="font-semibold text-foreground">Your subjects</h1>
-          </div>
-        ) : (
+      <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
+        {view === "subjects" || view === "lesson" ? (
+          view === "subjects" ? (
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h1 className="font-semibold text-foreground">Your subjects</h1>
+            </div>
+          ) : (
+            <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 -ml-2">
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
+          )
+        ) : view === "module" ? (
           <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 -ml-2">
             <ArrowLeft className="h-4 w-4" /> Back
           </Button>
-        )}
-        {view === "subjects" && (
-          <Button variant="ghost" size="sm" onClick={signOut} className="gap-2">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        )}
+        ) : <div />}
+        <div className="flex items-center gap-2">
+          {(view === "subjects" || view === "lesson" || view === "module") && (
+            <StatsHeader stats={stats} />
+          )}
+          {view === "subjects" && (
+            <Button variant="ghost" size="sm" onClick={signOut} className="gap-2 ml-1">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="mx-auto max-w-xl px-6 py-8">
@@ -474,14 +516,18 @@ const Dashboard = () => {
             </div>
 
             <div className="mt-8 space-y-3">
-              <Button size="lg" className="h-14 w-full gap-2 text-base font-semibold" onClick={openChat}>
+              {!activePlan.completed_modules?.includes(activeModuleIndex) ? (
+                <Button size="lg" className="h-14 w-full gap-2 text-base font-bold" onClick={startQuiz}>
+                  <Play className="h-5 w-5" /> Start lesson
+                </Button>
+              ) : (
+                <div className="flex items-center justify-center gap-2 rounded-2xl bg-green-500/10 py-3 text-sm font-semibold text-green-600 dark:text-green-400">
+                  <Check className="h-4 w-4" /> Module complete
+                </div>
+              )}
+              <Button size="lg" variant="outline" className="h-12 w-full gap-2" onClick={openChat}>
                 Chat with teacher
               </Button>
-              {!activePlan.completed_modules?.includes(activeModuleIndex) && (
-                <Button size="lg" variant="outline" className="h-12 w-full" onClick={markComplete}>
-                  Mark complete
-                </Button>
-              )}
             </div>
           </div>
         )}
@@ -568,6 +614,62 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* QUIZ — full screen */}
+      {view === "quiz" && currentModule && activePlan && stats && (
+        <QuizScreen
+          lessonPlanId={activePlan.id}
+          moduleIndex={activeModuleIndex}
+          moduleTitle={currentModule.title}
+          hearts={stats.hearts}
+          onClose={() => setView("module")}
+          onWrong={async () => {
+            const next = await loseHeart();
+            return next ? { hearts: next.hearts } : null;
+          }}
+          onPass={handleQuizPass}
+          onOutOfHearts={() => setView("noHearts")}
+        />
+      )}
+
+      {/* NO HEARTS */}
+      {view === "noHearts" && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
+            <Heart className="h-10 w-10 text-red-500" />
+          </div>
+          <h2 className="mt-6 text-2xl font-bold text-foreground">Out of hearts</h2>
+          <p className="mt-2 max-w-sm text-center text-muted-foreground">
+            You'll get a heart back every 30 minutes. Come back soon to keep learning.
+          </p>
+          <Button size="lg" className="mt-8 h-14 px-8 text-base font-bold" onClick={() => setView("lesson")}>
+            Back to lessons
+          </Button>
+        </div>
+      )}
+
+      {/* MODULE COMPLETE celebration */}
+      {view === "moduleComplete" && lastReward && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
+          <div className="flex h-24 w-24 animate-pop items-center justify-center rounded-full bg-primary/10">
+            <Trophy className="h-12 w-12 text-primary" />
+          </div>
+          <h2 className="mt-6 text-3xl font-bold text-foreground">Module complete!</h2>
+          <p className="mt-2 text-muted-foreground">{lastReward.correct} of {lastReward.total} correct</p>
+          <div className="mt-6 flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-lg font-bold text-primary">
+            <Sparkles className="h-5 w-5" /> +{lastReward.xp} XP
+          </div>
+          <Button
+            size="lg"
+            className="mt-10 h-14 px-8 text-base font-bold"
+            onClick={() => { setLastReward(null); setView("lesson"); }}
+          >
+            Continue
+          </Button>
+        </div>
+      )}
+
+      <Confetti trigger={confettiTick} />
     </main>
   );
 };
