@@ -614,6 +614,62 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* QUIZ — full screen */}
+      {view === "quiz" && currentModule && activePlan && stats && (
+        <QuizScreen
+          lessonPlanId={activePlan.id}
+          moduleIndex={activeModuleIndex}
+          moduleTitle={currentModule.title}
+          hearts={stats.hearts}
+          onClose={() => setView("module")}
+          onWrong={async () => {
+            const next = await loseHeart();
+            return next ? { hearts: next.hearts } : null;
+          }}
+          onPass={handleQuizPass}
+          onOutOfHearts={() => setView("noHearts")}
+        />
+      )}
+
+      {/* NO HEARTS */}
+      {view === "noHearts" && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
+            <Heart className="h-10 w-10 text-red-500" />
+          </div>
+          <h2 className="mt-6 text-2xl font-bold text-foreground">Out of hearts</h2>
+          <p className="mt-2 max-w-sm text-center text-muted-foreground">
+            You'll get a heart back every 30 minutes. Come back soon to keep learning.
+          </p>
+          <Button size="lg" className="mt-8 h-14 px-8 text-base font-bold" onClick={() => setView("lesson")}>
+            Back to lessons
+          </Button>
+        </div>
+      )}
+
+      {/* MODULE COMPLETE celebration */}
+      {view === "moduleComplete" && lastReward && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
+          <div className="flex h-24 w-24 animate-pop items-center justify-center rounded-full bg-primary/10">
+            <Trophy className="h-12 w-12 text-primary" />
+          </div>
+          <h2 className="mt-6 text-3xl font-bold text-foreground">Module complete!</h2>
+          <p className="mt-2 text-muted-foreground">{lastReward.correct} of {lastReward.total} correct</p>
+          <div className="mt-6 flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-lg font-bold text-primary">
+            <Sparkles className="h-5 w-5" /> +{lastReward.xp} XP
+          </div>
+          <Button
+            size="lg"
+            className="mt-10 h-14 px-8 text-base font-bold"
+            onClick={() => { setLastReward(null); setView("lesson"); }}
+          >
+            Continue
+          </Button>
+        </div>
+      )}
+
+      <Confetti trigger={confettiTick} />
     </main>
   );
 };
