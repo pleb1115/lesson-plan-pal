@@ -2,13 +2,18 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useStats } from "@/hooks/useStats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Youtube, ExternalLink } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy } from "lucide-react";
+import { StatsHeader } from "@/components/StatsHeader";
+import { QuizScreen } from "@/components/QuizScreen";
+import { Confetti } from "@/components/Confetti";
+import { sfx } from "@/lib/sfx";
 
 type Subject = { id: string; name: string };
 type Module = { title: string; summary: string; exercises: string[] };
@@ -22,7 +27,7 @@ type LessonPlan = {
   completed_modules: number[];
 };
 type Message = { id: string; role: string; content: string; created_at: string };
-type View = "subjects" | "lesson" | "module" | "chat";
+type View = "subjects" | "lesson" | "module" | "chat" | "quiz" | "noHearts" | "moduleComplete";
 
 const SUGGESTIONS = ["Explain this", "Give me an example", "Quiz me"];
 
