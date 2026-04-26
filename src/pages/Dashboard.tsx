@@ -36,12 +36,16 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const { stats, loseHeart, awardXp } = useStats();
+
   const [view, setView] = useState<View>("subjects");
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
   const [activePlan, setActivePlan] = useState<LessonPlan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [confettiTick, setConfettiTick] = useState(0);
+  const [lastReward, setLastReward] = useState<{ xp: number; correct: number; total: number } | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [chatInput, setChatInput] = useState("");
