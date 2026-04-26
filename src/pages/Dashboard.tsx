@@ -148,8 +148,26 @@ const Dashboard = () => {
     setMessages((data || []) as Message[]);
   };
 
-  const markComplete = async () => {
+  const startQuiz = () => {
+    if (!stats || stats.hearts <= 0) {
+      setView("noHearts");
+      return;
+    }
+    sfx.tap();
+    setView("quiz");
+  };
+
+  const handleQuizPass = async (correctCount: number) => {
     if (!activePlan) return;
+    const total = 5;
+    const passed = correctCount >= 4;
+    if (!passed) {
+      setLastReward({ xp: 0, correct: correctCount, total });
+      toast({ title: "Almost there", description: `You got ${correctCount}/${total}. Try again to complete this module.` });
+      setView("module");
+      return;
+    }
+    const xp = 10 + correctCount * 5;
     const completed = Array.from(new Set([...(activePlan.completed_modules || []), activeModuleIndex]));
     const { error } = await supabase
       .from("lesson_plans")
@@ -160,7 +178,11 @@ const Dashboard = () => {
       return;
     }
     setActivePlan({ ...activePlan, completed_modules: completed });
-    setView("lesson");
+    await awardXp(xp);
+    setLastReward({ xp, correct: correctCount, total });
+    setConfettiTick((t) => t + 1);
+    sfx.complete();
+    setView("moduleComplete");
   };
 
   const handleCreateSubject = async (e: React.FormEvent) => {
