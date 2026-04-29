@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles } from "lucide-react";
+import robotLogo from "@/assets/robot-logo.png";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -51,7 +51,7 @@ const Auth = () => {
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md p-8">
         <div className="mb-6 flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
+          <img src={robotLogo} alt="AI Teacher logo" className="h-7 w-7 object-contain" />
           <h1 className="text-2xl font-bold text-foreground">AI Teacher</h1>
         </div>
         <Tabs defaultValue="signin">
