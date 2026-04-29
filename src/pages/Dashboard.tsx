@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, Brain, GraduationCap, Briefcase, Scale, Gavel, Stethoscope, Leaf, Microscope, Film, Gamepad2, Hammer, Lightbulb, PenTool, Drama, Building2, Cpu, Database, Wrench, type LucideIcon } from "lucide-react";
 import { StatsHeader } from "@/components/StatsHeader";
 import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
@@ -130,15 +130,39 @@ const Dashboard = () => {
       [/program|code|python|java|web|software|comput/, Code],
       [/art|draw|paint|design/, Palette],
       [/music|guitar|piano/, Music],
-      [/lang|spanish|french|german|english|writ|gramm/, Languages],
+      [/lang|spanish|french|german|english|gramm/, Languages],
+      [/literat|poet|novel|read|book/, BookOpen],
+      [/writ|essay|journal/, PenTool],
+      [/philos|ethic|logic|think/, Brain],
       [/cook|food|chef/, ChefHat],
       [/space|astro/, Rocket],
       [/sport|fit|gym|run/, Dumbbell],
-      [/finance|econ|money|invest/, DollarSign],
+      [/finance|econ|money|invest|account/, DollarSign],
       [/photo|camera/, Camera],
+      [/sales|market|negoti/, Briefcase],
+      [/law|legal/, Gavel],
+      [/justice|polic|govern/, Scale],
+      [/med|health|nurs|doctor|clinic/, Stethoscope],
+      [/eco|environ|nature|plant|botan/, Leaf],
+      [/research|lab|microbio/, Microscope],
+      [/film|movie|cinema|video/, Film],
+      [/game|gaming/, Gamepad2],
+      [/build|construct|carpent/, Hammer],
+      [/engineer|mechan|repair/, Wrench],
+      [/architect|civil/, Building2],
+      [/data|analyt|sql/, Database],
+      [/ai|machine learning|ml|hardware|cpu/, Cpu],
+      [/exam|cert|capm|pmp|test|prep|degree|school|univers|academ/, GraduationCap],
+      [/drama|theat|act|perform/, Drama],
+      [/idea|innovat|entrepre|startup/, Lightbulb],
     ];
-    let Icon: LucideIcon = Sparkles;
+    let Icon: LucideIcon | null = null;
     for (const [re, I] of map) if (re.test(lower)) { Icon = I; break; }
+    if (!Icon) {
+      // Fallback: deterministically pick a distinct icon from the pool by hash
+      const pool: LucideIcon[] = [Sparkles, Brain, Lightbulb, BookOpen, GraduationCap, Briefcase, Globe, Palette, Rocket, Drama];
+      Icon = pool[hash % pool.length];
+    }
     return { gradient, Icon };
   };
 
