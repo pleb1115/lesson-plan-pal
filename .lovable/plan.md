@@ -1,64 +1,44 @@
-## Goal
+# Fix Short-Answer Quiz Grading
 
-Turn each module into an interactive Duolingo-style lesson. Module completion is gated by passing an AI-generated quiz. Layer on XP, levels, daily streaks, hearts, sound effects, and snappy animations.
+## What's broken
 
-## What you'll experience
+Short-answer questions in the quiz almost always come back as wrong (or fail with a "Grading failed" toast), even when the answer is reasonable.
 
-1. **Open a module** → read the short summary → tap **Start lesson**.
-2. **Quiz screen** (one question at a time, full-screen, focused):
-   - 5 questions per module, mix of multiple choice and short answer.
-   - Big tap targets, instant feedback (green ✓ ding, red ✗ buzz).
-   - Wrong answer = lose a heart. Run out of hearts = "come back later" screen.
-   - Bottom progress bar fills as you advance.
-3. **Module complete** → confetti + ding, XP awarded, streak updated, level bar animates.
-4. **Subjects screen** shows persistent header chip: ❤️ hearts · 🔥 streak · ⭐ XP / level.
+Two root causes in `supabase/functions/grade-answer/index.ts`:
 
-## New backend pieces
+1. **Fragile AI parsing.** The function tells the AI to reply via a forced "grade" tool call and then reads `choices[0].message.tool_calls[0].function.arguments`. When the model (currently `google/gemini-2.5-flash-lite`) returns a plain text reply instead of a tool call — which happens often with the lite model — `tc` is undefined and the function returns `{ correct: false, feedback: "Could not grade." }`. The student is marked wrong no matter what they typed.
+2. **No JSON cleanup.** Even when the model does emit JSON (in tool args or content), it sometimes wraps it in ```` ```json ```` fences or trails commas. `JSON.parse` throws and the catch-all returns `correct: false`.
 
-**1. New table `user_stats`** (one row per user):
-- `xp` int, `hearts` int (default 5, max 5), `hearts_refilled_at` timestamp, `streak` int, `last_active_date` date.
-- RLS: own rows only.
+The local "accepted_answers" shortcut also only matches via `===` / `includes` on the full normalized string, so a multi-word answer like "the study of fundamental questions" never matches a key concept like "fundamental".
 
-**2. New table `module_quizzes`** (cache generated quizzes so we don't re-generate every time):
-- `lesson_plan_id` uuid, `module_index` int, `questions` jsonb. Unique on (plan, index).
-- RLS: user owns the parent lesson_plan.
+## The fix
 
-**3. New edge function `generate-quiz`**:
-- Input: `lesson_plan_id`, `module_index`.
-- Uses Lovable AI (gemini-3-flash-preview) with **tool calling** to return structured JSON: 5 questions, mix of `multiple_choice` (4 options, 1 correct) and `short_answer` (accepted answers + key concepts).
-- Caches result in `module_quizzes`.
+Rewrite `supabase/functions/grade-answer/index.ts` so grading is robust and lenient:
 
-**4. New edge function `grade-answer`** (for short-answer only):
-- Input: question, user answer, expected concepts.
-- AI returns `{ correct: bool, feedback: string }`. Multiple-choice is graded client-side (instant).
+1. **Better local pre-check** before calling the AI:
+   - Normalize (lowercase, strip punctuation, collapse whitespace).
+   - Token-overlap match against `accepted_answers` and `key_concepts`: if the student's answer contains 2+ key tokens (or any full accepted phrase), mark correct immediately. This handles the easy cases without an AI round-trip.
 
-**5. Heart refill logic**: 1 heart every 30 min, computed on read in `user_stats`. Done in a small RPC or client-side calc.
+2. **Stronger AI call**:
+   - Switch to `google/gemini-2.5-flash` (more reliable structured output than `-lite` for this task; same gateway, no key needed).
+   - Keep the forced tool call, but ALSO accept a JSON object in `message.content` as a fallback.
+   - Add `extractJsonFromResponse()` — strips ```` ``` ```` fences, finds the first `{`/last `}`, retries parse after removing trailing commas and control characters.
+   - Add `detectTruncation()` — if braces don't balance, treat as truncation.
 
-## New frontend pieces
+3. **Lenient failure mode**: if the AI call returns 429/402, times out, or produces unparseable output AND the local check found at least one key-concept token, return `correct: true` with an encouraging message. If no signal at all, return `correct: false` with a clear "Couldn't grade — try rephrasing" message instead of silently marking wrong.
 
-- **`StatsHeader`** component (hearts / streak / XP-level chip) shown on subjects + lesson screens.
-- **`QuizScreen`** view: full-screen, single question card, options as big buttons, footer "Check" → "Continue" pattern (Duolingo-style two-state button).
-- **Animations**: shake on wrong, scale-pop on correct, slide between questions, confetti on module complete (use lightweight inline canvas, no library).
-- **Sound**: short base64-encoded WAV for ding/buzz/complete (no asset hosting needed).
-- **Level math**: `level = floor(sqrt(xp / 50))`, progress bar to next level.
+4. **Better logging**: `console.log` the raw AI response on parse failure so future issues are debuggable from edge function logs.
 
-## Flow changes
+5. **Frontend tweak** (`src/components/QuizScreen.tsx`): on grading toast errors, don't bail — keep the user in `answering` phase so they can retry. Also show the `feedback` string from the server when present.
 
-- "Mark complete" button removed from module view.
-- Module is auto-completed only when quiz is passed (≥4/5 correct).
-- Failing the quiz lets you retry (no heart refund, but no XP penalty beyond hearts).
-- Streak increments first time you pass any module on a given day.
+## Files changed
 
-## Technical notes
+- `supabase/functions/grade-answer/index.ts` — rewritten with the parsing, model swap, token-overlap pre-check, and lenient fallback.
+- `src/components/QuizScreen.tsx` — small UX tweak so grading errors don't dead-end the quiz.
 
-- Quizzes are generated on-demand the first time you open a module, then cached.
-- All AI calls go through edge functions (never direct from client).
-- `user_stats` row is auto-created on first read via upsert.
-- Sounds use `new Audio(dataUrl).play()` with a mute toggle stored in localStorage.
-- Confetti = small self-contained canvas component, no npm dep.
+## How to verify
 
-## Out of scope
-
-- Leaderboards, friends, gem shop, league system.
-- Spaced-repetition review of past modules (could be a follow-up).
-- Voice input for short answers.
+1. Open any module's quiz, reach a short-answer question, type a reasonable answer → should be marked correct with encouraging feedback.
+2. Type gibberish → should be marked wrong with the explanation.
+3. Type a partial-but-valid answer (one key concept) → should still be accepted (lenient).
+4. Check `grade-answer` edge function logs — should now show successful invocations with the parsed verdict.

@@ -94,12 +94,17 @@ export const QuizScreen = ({
           },
         });
         if (error) throw error;
+        if (data?.error) throw new Error(data.error);
         correct = !!data?.correct;
         fb = data?.feedback || fb;
       } catch (err: any) {
-        toast({ title: "Grading failed", description: err.message, variant: "destructive" });
+        toast({
+          title: "Couldn't grade that",
+          description: (err?.message || "Try again or rephrase your answer.") + " You can retry.",
+          variant: "destructive",
+        });
         setGrading(false);
-        return;
+        return; // stay in answering phase so user can retry
       }
       setGrading(false);
     }
