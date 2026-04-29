@@ -358,7 +358,7 @@ const Dashboard = () => {
         {view === "subjects" || view === "lesson" ? (
           view === "subjects" ? (
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <img src={robotLogo} alt="AI Teacher logo" className="h-7 w-7 object-contain" />
               <h1 className="font-semibold text-foreground">Your subjects</h1>
             </div>
           ) : (
