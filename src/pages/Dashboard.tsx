@@ -626,11 +626,11 @@ const Dashboard = () => {
           <div className="flex-1 overflow-y-auto px-4 py-6">
             <div className="mx-auto max-w-2xl space-y-3">
               {messages.length === 0 && !streaming && (
-                <div className="flex flex-col items-center py-8 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="h-6 w-6 text-primary" />
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                    <Sparkles className="h-12 w-12 text-primary" />
                   </div>
-                  <p className="mt-4 text-foreground">Ask anything about this module.</p>
+                  <p className="mt-6 text-lg text-foreground">Ask anything about this module.</p>
                 </div>
               )}
               {messages.map((m) => (
