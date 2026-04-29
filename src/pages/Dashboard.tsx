@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles } from "lucide-react";
 import { StatsHeader } from "@/components/StatsHeader";
 import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
@@ -628,7 +628,7 @@ const Dashboard = () => {
               {messages.length === 0 && !streaming && (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-                    <Sparkles className="h-[75px] w-[100px] text-primary" />
+                    <Bot className="h-[75px] w-[100px] text-primary" />
                   </div>
                   <p className="mt-6 text-lg text-foreground">Ask anything about this module.</p>
                 </div>
