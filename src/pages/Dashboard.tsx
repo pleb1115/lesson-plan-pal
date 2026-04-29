@@ -80,12 +80,65 @@ const Dashboard = () => {
       .from("subjects")
       .select("id, name")
       .order("created_at", { ascending: false });
-    setSubjectsLoading(false);
     if (error) {
+      setSubjectsLoading(false);
       toast({ title: "Could not load subjects", description: error.message, variant: "destructive" });
       return;
     }
-    setSubjects(data || []);
+    const subs = (data || []) as Subject[];
+    // fetch progress per subject
+    const ids = subs.map((s) => s.id);
+    if (ids.length) {
+      const { data: plans } = await supabase
+        .from("lesson_plans")
+        .select("subject_id, modules, completed_modules")
+        .in("subject_id", ids);
+      const map = new Map<string, { completed: number; total: number }>();
+      (plans || []).forEach((p: any) => {
+        const total = Array.isArray(p.modules) ? p.modules.length : 0;
+        const completed = Array.isArray(p.completed_modules) ? p.completed_modules.length : 0;
+        // keep highest progress per subject if multiple plans
+        const prev = map.get(p.subject_id);
+        if (!prev || completed > prev.completed) map.set(p.subject_id, { completed, total });
+      });
+      subs.forEach((s) => {
+        const m = map.get(s.id);
+        s.completed = m?.completed || 0;
+        s.total = m?.total || 0;
+      });
+    }
+    setSubjects(subs);
+    setSubjectsLoading(false);
+  };
+
+  // Deterministic gradient + emoji based on subject name
+  const subjectVisual = (name: string) => {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+    const hue1 = hash % 360;
+    const hue2 = (hue1 + 40) % 360;
+    const gradient = `linear-gradient(135deg, hsl(${hue1} 80% 60%), hsl(${hue2} 75% 50%))`;
+    const lower = name.toLowerCase();
+    const map: [RegExp, string][] = [
+      [/math|algebra|calc|geometry|stat/, "🧮"],
+      [/phys/, "⚛️"],
+      [/chem/, "🧪"],
+      [/bio|anatom/, "🧬"],
+      [/hist/, "📜"],
+      [/geo|earth|map/, "🌍"],
+      [/program|code|python|java|web|software|comput/, "💻"],
+      [/art|draw|paint|design/, "🎨"],
+      [/music|guitar|piano/, "🎵"],
+      [/lang|spanish|french|german|english|writ|gramm/, "📚"],
+      [/cook|food|chef/, "🍳"],
+      [/space|astro/, "🚀"],
+      [/sport|fit|gym|run/, "🏋️"],
+      [/finance|econ|money|invest/, "💰"],
+      [/photo|camera/, "📷"],
+    ];
+    let emoji = "✨";
+    for (const [re, e] of map) if (re.test(lower)) { emoji = e; break; }
+    return { gradient, emoji };
   };
 
   const openSubject = async (subjectId: string) => {
