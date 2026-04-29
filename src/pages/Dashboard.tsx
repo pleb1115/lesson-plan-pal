@@ -120,26 +120,26 @@ const Dashboard = () => {
     const hue2 = (hue1 + 40) % 360;
     const gradient = `linear-gradient(135deg, hsl(${hue1} 80% 60%), hsl(${hue2} 75% 50%))`;
     const lower = name.toLowerCase();
-    const map: [RegExp, string][] = [
-      [/math|algebra|calc|geometry|stat/, "🧮"],
-      [/phys/, "⚛️"],
-      [/chem/, "🧪"],
-      [/bio|anatom/, "🧬"],
-      [/hist/, "📜"],
-      [/geo|earth|map/, "🌍"],
-      [/program|code|python|java|web|software|comput/, "💻"],
-      [/art|draw|paint|design/, "🎨"],
-      [/music|guitar|piano/, "🎵"],
-      [/lang|spanish|french|german|english|writ|gramm/, "📚"],
-      [/cook|food|chef/, "🍳"],
-      [/space|astro/, "🚀"],
-      [/sport|fit|gym|run/, "🏋️"],
-      [/finance|econ|money|invest/, "💰"],
-      [/photo|camera/, "📷"],
+    const map: [RegExp, LucideIcon][] = [
+      [/math|algebra|calc|geometry|stat/, Calculator],
+      [/phys/, Atom],
+      [/chem/, FlaskConical],
+      [/bio|anatom/, Dna],
+      [/hist/, ScrollText],
+      [/geo|earth|map/, Globe],
+      [/program|code|python|java|web|software|comput/, Code],
+      [/art|draw|paint|design/, Palette],
+      [/music|guitar|piano/, Music],
+      [/lang|spanish|french|german|english|writ|gramm/, Languages],
+      [/cook|food|chef/, ChefHat],
+      [/space|astro/, Rocket],
+      [/sport|fit|gym|run/, Dumbbell],
+      [/finance|econ|money|invest/, DollarSign],
+      [/photo|camera/, Camera],
     ];
-    let emoji = "✨";
-    for (const [re, e] of map) if (re.test(lower)) { emoji = e; break; }
-    return { gradient, emoji };
+    let Icon: LucideIcon = Sparkles;
+    for (const [re, I] of map) if (re.test(lower)) { Icon = I; break; }
+    return { gradient, Icon };
   };
 
   const openSubject = async (subjectId: string) => {
@@ -404,7 +404,7 @@ const Dashboard = () => {
                   const total = s.total || 0;
                   const completed = s.completed || 0;
                   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-                  const { gradient, emoji } = subjectVisual(s.name);
+                  const { gradient, Icon } = subjectVisual(s.name);
                   return (
                     <button
                       key={s.id}
@@ -412,11 +412,11 @@ const Dashboard = () => {
                       className="group flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-all hover:border-primary hover:shadow-md"
                     >
                       <div
-                        className="flex w-20 shrink-0 items-center justify-center text-4xl"
+                        className="flex w-20 shrink-0 items-center justify-center text-white"
                         style={{ background: gradient }}
                         aria-hidden
                       >
-                        <span className="drop-shadow">{emoji}</span>
+                        <Icon className="h-9 w-9 drop-shadow" strokeWidth={2} />
                       </div>
                       <div className="flex flex-1 items-center justify-between gap-3 p-4">
                         <div className="min-w-0">
