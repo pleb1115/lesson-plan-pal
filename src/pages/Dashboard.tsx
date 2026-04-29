@@ -13,6 +13,7 @@ import { ArrowLeft, BookOpen, Plus, LogOut, Send, Sparkles, Check, Lock, Play, Y
 import { StatsHeader } from "@/components/StatsHeader";
 import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
+import robotLogo from "@/assets/robot-logo.png";
 import { sfx } from "@/lib/sfx";
 
 type Subject = { id: string; name: string; completed?: number; total?: number };
