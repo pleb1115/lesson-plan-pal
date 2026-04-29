@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, type LucideIcon } from "lucide-react";
 import { StatsHeader } from "@/components/StatsHeader";
 import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
