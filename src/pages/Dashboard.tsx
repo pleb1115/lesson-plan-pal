@@ -15,7 +15,7 @@ import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
 import { sfx } from "@/lib/sfx";
 
-type Subject = { id: string; name: string };
+type Subject = { id: string; name: string; completed?: number; total?: number };
 type Module = { title: string; summary: string; exercises: string[] };
 type LessonPlan = {
   id: string;
