@@ -399,21 +399,44 @@ const Dashboard = () => {
                     No subjects yet. Create your first below.
                   </p>
                 )}
-                {subjects.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => openSubject(s.id)}
-                    className="group flex w-full items-center justify-between rounded-2xl border border-border bg-card p-5 text-left shadow-sm transition-all hover:border-primary hover:shadow-md"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                        <BookOpen className="h-5 w-5 text-primary" />
+                {subjects.map((s) => {
+                  const total = s.total || 0;
+                  const completed = s.completed || 0;
+                  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+                  const { gradient, emoji } = subjectVisual(s.name);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => openSubject(s.id)}
+                      className="group flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-all hover:border-primary hover:shadow-md"
+                    >
+                      <div
+                        className="flex w-20 shrink-0 items-center justify-center text-4xl"
+                        style={{ background: gradient }}
+                        aria-hidden
+                      >
+                        <span className="drop-shadow">{emoji}</span>
                       </div>
-                      <span className="text-lg font-semibold text-foreground">{s.name}</span>
-                    </div>
-                    <span className="text-muted-foreground transition-transform group-hover:translate-x-1">→</span>
-                  </button>
-                ))}
+                      <div className="flex flex-1 items-center justify-between gap-3 p-4">
+                        <div className="min-w-0">
+                          <p className="truncate text-lg font-semibold text-foreground">{s.name}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {total > 0 ? `${completed} / ${total} modules` : "Lesson ready"}
+                            {pct > 0 && <span className="ml-2 font-medium text-primary">{pct}%</span>}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1">→</span>
+                      </div>
+                      {/* Vertical progress bar on the side */}
+                      <div className="relative w-2 shrink-0 bg-muted" aria-label={`${pct}% complete`}>
+                        <div
+                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-primary/70 transition-all"
+                          style={{ height: `${pct}%` }}
+                        />
+                      </div>
+                    </button>
+                  );
+                })}
               </>
             )}
 
