@@ -400,13 +400,16 @@ const Dashboard = () => {
   const currentModule = activePlan?.modules[activeModuleIndex];
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
+    <main className="relative min-h-screen bg-background">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-card/90 backdrop-blur px-4 py-3">
         {view === "subjects" || view === "lesson" ? (
           view === "subjects" ? (
             <div className="flex items-center gap-2">
-              <img src={robotLogo} alt="AI Teacher logo" className="h-7 w-7 object-contain" />
-              <h1 className="font-semibold text-foreground">Your subjects</h1>
+              <img src={robotLogo} alt="ORACLE" className="h-7 w-7 object-contain drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-primary text-glow">Command Center</p>
+                <h1 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">Knowledge Domains</h1>
+              </div>
             </div>
           ) : (
             <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 -ml-2">
