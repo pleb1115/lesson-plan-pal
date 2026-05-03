@@ -769,15 +769,16 @@ const Dashboard = () => {
       {/* NO HEARTS */}
       {view === "noHearts" && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
-            <Heart className="h-10 w-10 text-red-500" />
+          <GridBackground />
+          <div className="relative panel glow-accent flex h-20 w-20 items-center justify-center rounded-sm">
+            <Heart className="h-10 w-10 text-accent text-glow-accent" />
           </div>
-          <h2 className="mt-6 text-2xl font-bold text-foreground">Out of hearts</h2>
-          <p className="mt-2 max-w-sm text-center text-muted-foreground">
-            You'll get a heart back every 30 minutes. Come back soon to keep learning.
+          <h2 className="relative mt-6 font-mono text-2xl font-bold uppercase tracking-widest text-accent text-glow-accent">SYSTEM DEPLETED</h2>
+          <p className="relative mt-2 max-w-sm text-center text-sm text-muted-foreground">
+            Hearts regenerate every 30 minutes. Return when your matrix has recovered.
           </p>
-          <Button size="lg" className="mt-8 h-14 px-8 text-base font-bold" onClick={() => setView("lesson")}>
-            Back to lessons
+          <Button size="lg" className="relative mt-8 h-14 px-8 font-mono uppercase tracking-widest" onClick={() => setView("lesson")}>
+            Return
           </Button>
         </div>
       )}
@@ -785,25 +786,30 @@ const Dashboard = () => {
       {/* MODULE COMPLETE celebration */}
       {view === "moduleComplete" && lastReward && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
-          <div className="flex h-24 w-24 animate-pop items-center justify-center rounded-full bg-primary/10">
-            <Trophy className="h-12 w-12 text-primary" />
+          <GridBackground />
+          <div className="relative panel glow-primary flex h-24 w-24 animate-pop items-center justify-center rounded-sm">
+            <Trophy className="h-12 w-12 text-primary text-glow" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-foreground">Module complete!</h2>
-          <p className="mt-2 text-muted-foreground">{lastReward.correct} of {lastReward.total} correct</p>
-          <div className="mt-6 flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-lg font-bold text-primary">
+          <p className="relative mt-6 font-mono text-xs uppercase tracking-[0.4em] text-primary text-glow">// PROTOCOL COMPLETE //</p>
+          <h2 className="relative mt-2 font-mono text-3xl font-bold uppercase tracking-widest text-foreground">Domain Assimilated</h2>
+          <p className="relative mt-2 font-mono text-sm text-muted-foreground">
+            ACCURACY: {lastReward.correct}/{lastReward.total}
+          </p>
+          <div className="relative mt-6 flex items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-5 py-2 font-mono text-lg font-bold uppercase tracking-wider text-primary text-glow animate-pulse-glow">
             <Sparkles className="h-5 w-5" /> +{lastReward.xp} XP
           </div>
           <Button
             size="lg"
-            className="mt-10 h-14 px-8 text-base font-bold"
+            className="relative mt-10 h-14 px-8 font-mono uppercase tracking-widest glow-primary"
             onClick={() => { setLastReward(null); setView("lesson"); }}
           >
-            Continue
+            Proceed
           </Button>
         </div>
       )}
 
       <Confetti trigger={confettiTick} />
+      <LevelUpModal level={levelUp} onClose={() => setLevelUp(null)} />
     </main>
   );
 };
