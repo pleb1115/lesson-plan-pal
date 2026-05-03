@@ -436,69 +436,77 @@ const Dashboard = () => {
       <div className="mx-auto max-w-xl px-6 py-8">
         {/* SUBJECTS */}
         {view === "subjects" && (
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
-            {subjectsLoading ? (
-              <>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </>
-            ) : (
-              <>
-                {subjects.length === 0 && (
-                  <p className="py-8 text-center text-muted-foreground">
-                    No subjects yet. Create your first below.
-                  </p>
-                )}
-                {subjects.map((s) => {
-                  const total = s.total || 0;
-                  const completed = s.completed || 0;
-                  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-                  const { gradient, Icon } = subjectVisual(s.name);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => openSubject(s.id)}
-                      className="group flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-all hover:border-primary hover:shadow-md"
-                    >
-                      <div
-                        className="flex w-20 shrink-0 items-center justify-center text-white"
-                        style={{ background: gradient }}
-                        aria-hidden
+          <div className="animate-in fade-in slide-in-from-bottom-2">
+            <DailyQuestsPanel refreshKey={questTick} onClaimed={async (xp) => { await awardXp(xp); }} />
+
+            <div className="mb-3 flex items-center gap-2">
+              <Terminal className="h-3.5 w-3.5 text-primary" />
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary text-glow">// Active Domains</p>
+            </div>
+
+            <div className="space-y-2">
+              {subjectsLoading ? (
+                <>
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </>
+              ) : (
+                <>
+                  {subjects.length === 0 && (
+                    <p className="py-6 text-center font-mono text-sm uppercase tracking-wider text-muted-foreground">
+                      &gt; NO DOMAINS ACQUIRED. INITIATE BELOW.
+                    </p>
+                  )}
+                  {subjects.map((s) => {
+                    const total = s.total || 0;
+                    const completed = s.completed || 0;
+                    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+                    const { gradient, Icon } = subjectVisual(s.name);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => openSubject(s.id)}
+                        className="group flex w-full items-stretch gap-0 overflow-hidden rounded-sm border border-border bg-card text-left transition-all hover:border-primary hover:glow-primary"
                       >
-                        <Icon className="h-9 w-9 drop-shadow" strokeWidth={2} />
-                      </div>
-                      <div className="flex flex-1 items-center justify-between gap-3 p-4">
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-semibold text-foreground">{s.name}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {total > 0 ? `${completed} / ${total} modules` : "Lesson ready"}
-                            {pct > 0 && <span className="ml-2 font-medium text-primary">{pct}%</span>}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1">→</span>
-                      </div>
-                      {/* Vertical progress bar on the side */}
-                      <div className="relative w-2 shrink-0 bg-muted" aria-label={`${pct}% complete`}>
                         <div
-                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-primary/70 transition-all"
-                          style={{ height: `${pct}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </>
-            )}
+                          className="flex w-20 shrink-0 items-center justify-center text-white"
+                          style={{ background: gradient }}
+                          aria-hidden
+                        >
+                          <Icon className="h-9 w-9 drop-shadow" strokeWidth={2} />
+                        </div>
+                        <div className="flex flex-1 items-center justify-between gap-3 p-4">
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-semibold text-foreground">{s.name}</p>
+                            <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                              {total > 0 ? `${completed}/${total} PROTOCOLS` : "READY"}
+                              {pct > 0 && <span className="ml-2 text-primary text-glow">{pct}%</span>}
+                            </p>
+                          </div>
+                          <span className="shrink-0 font-mono text-primary transition-transform group-hover:translate-x-1">›</span>
+                        </div>
+                        <div className="relative w-1.5 shrink-0 bg-muted" aria-label={`${pct}% complete`}>
+                          <div
+                            className="absolute bottom-0 left-0 right-0 bg-primary transition-all"
+                            style={{ height: `${pct}%`, boxShadow: "0 0 8px hsl(var(--primary)/0.6)" }}
+                          />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
 
             <Dialog open={newOpen} onOpenChange={setNewOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="mt-6 h-14 w-full gap-2 text-base font-semibold">
-                  <Plus className="h-5 w-5" /> New subject
+                <Button size="lg" className="mt-6 h-14 w-full gap-2 font-mono text-sm font-bold uppercase tracking-widest glow-primary">
+                  <Plus className="h-5 w-5" /> Acquire Domain
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>What do you want to learn?</DialogTitle>
+                  <DialogTitle className="font-mono uppercase tracking-wider">// Define Knowledge Domain</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateSubject} className="space-y-4">
                   <Input
@@ -507,10 +515,10 @@ const Dashboard = () => {
                     value={newPrompt}
                     onChange={(e) => setNewPrompt(e.target.value)}
                     placeholder="e.g. Linear algebra for beginners"
-                    className="h-12 text-base"
+                    className="h-12 font-mono text-base"
                   />
-                  <Button type="submit" size="lg" className="w-full" disabled={creating}>
-                    {creating ? "Building lesson..." : "Create lesson"}
+                  <Button type="submit" size="lg" className="w-full font-mono uppercase tracking-wider" disabled={creating}>
+                    {creating ? "Compiling protocols..." : "Compile Domain"}
                   </Button>
                 </form>
               </DialogContent>
