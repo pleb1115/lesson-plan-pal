@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_quests: {
+        Row: {
+          claimed: boolean
+          completed: boolean
+          created_at: string
+          id: string
+          label: string
+          progress: number
+          quest_date: string
+          quest_type: string
+          target: number
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          claimed?: boolean
+          completed?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          progress?: number
+          quest_date?: string
+          quest_type: string
+          target?: number
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          claimed?: boolean
+          completed?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          progress?: number
+          quest_date?: string
+          quest_type?: string
+          target?: number
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       lesson_plans: {
         Row: {
           completed_modules: number[]
@@ -179,7 +221,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      award_xp: {
+        Args: { _amount: number }
+        Returns: {
+          last_active_date: string
+          streak: number
+          xp: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
