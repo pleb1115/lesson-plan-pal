@@ -684,10 +684,10 @@ const Dashboard = () => {
             <div className="mx-auto max-w-2xl space-y-3">
               {messages.length === 0 && !streaming && (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-sm border border-primary/40 bg-primary/5 glow-primary">
                     <Bot className="h-[75px] w-[100px] text-primary" />
                   </div>
-                  <p className="mt-6 text-lg text-foreground">Ask anything about this module.</p>
+                  <p className="mt-6 font-mono text-sm uppercase tracking-widest text-primary text-glow">ORACLE STANDS READY.</p>
                 </div>
               )}
               {messages.map((m) => (
