@@ -5,9 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { GridBackground } from "@/components/GridBackground";
 import robotLogo from "@/assets/robot-logo.png";
 
 const Auth = () => {
@@ -27,7 +27,7 @@ const Auth = () => {
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setBusy(false);
-    if (error) toast({ title: "Sign in failed", description: error.message, variant: "destructive" });
+    if (error) toast({ title: "Access denied", description: error.message, variant: "destructive" });
     else navigate("/dashboard", { replace: true });
   };
 
@@ -40,57 +40,61 @@ const Auth = () => {
       options: { emailRedirectTo: `${window.location.origin}/dashboard` },
     });
     setBusy(false);
-    if (error) toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+    if (error) toast({ title: "Registration failed", description: error.message, variant: "destructive" });
     else {
-      toast({ title: "Welcome!", description: "Account created. Taking you to your classroom." });
+      toast({ title: "Operator registered", description: "Routing to command center." });
       navigate("/dashboard", { replace: true });
     }
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md p-8">
-        <div className="mb-6 flex items-center gap-2">
-          <img src={robotLogo} alt="AI Teacher logo" className="h-7 w-7 object-contain" />
-          <h1 className="text-2xl font-bold text-foreground">AI Teacher</h1>
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">
+      <GridBackground />
+      <div className="panel glow-primary relative z-10 w-full max-w-md p-8">
+        <div className="mb-6 flex items-center gap-3">
+          <img src={robotLogo} alt="ORACLE" className="h-9 w-9 object-contain drop-shadow-[0_0_10px_hsl(var(--primary)/0.6)]" />
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary text-glow">ORACLE</p>
+            <h1 className="font-mono text-lg font-bold uppercase tracking-wider text-foreground">Operator Access</h1>
+          </div>
         </div>
         <Tabs defaultValue="signin">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signin">Sign in</TabsTrigger>
-            <TabsTrigger value="signup">Sign up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 font-mono uppercase">
+            <TabsTrigger value="signin">Authenticate</TabsTrigger>
+            <TabsTrigger value="signup">Register</TabsTrigger>
           </TabsList>
           <TabsContent value="signin">
             <form onSubmit={handleSignIn} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="si-email">Email</Label>
-                <Input id="si-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Label htmlFor="si-email" className="font-mono text-xs uppercase tracking-wider">Identity</Label>
+                <Input id="si-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="font-mono" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="si-pw">Password</Label>
-                <Input id="si-pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Label htmlFor="si-pw" className="font-mono text-xs uppercase tracking-wider">Cipher</Label>
+                <Input id="si-pw" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="font-mono" />
               </div>
-              <Button type="submit" className="w-full" disabled={busy}>
-                {busy ? "Signing in..." : "Sign in"}
+              <Button type="submit" className="w-full font-mono uppercase tracking-wider glow-primary" disabled={busy}>
+                {busy ? "Verifying..." : "Authenticate"}
               </Button>
             </form>
           </TabsContent>
           <TabsContent value="signup">
             <form onSubmit={handleSignUp} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="su-email">Email</Label>
-                <Input id="su-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Label htmlFor="su-email" className="font-mono text-xs uppercase tracking-wider">Identity</Label>
+                <Input id="su-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="font-mono" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="su-pw">Password</Label>
-                <Input id="su-pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Label htmlFor="su-pw" className="font-mono text-xs uppercase tracking-wider">Cipher</Label>
+                <Input id="su-pw" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="font-mono" />
               </div>
-              <Button type="submit" className="w-full" disabled={busy}>
-                {busy ? "Creating account..." : "Create account"}
+              <Button type="submit" className="w-full font-mono uppercase tracking-wider glow-primary" disabled={busy}>
+                {busy ? "Provisioning..." : "Register Operator"}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
-      </Card>
+      </div>
     </main>
   );
 };

@@ -9,10 +9,15 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, Brain, GraduationCap, Briefcase, Scale, Gavel, Stethoscope, Leaf, Microscope, Film, Gamepad2, Hammer, Lightbulb, PenTool, Drama, Building2, Cpu, Database, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, Brain, GraduationCap, Briefcase, Scale, Gavel, Stethoscope, Leaf, Microscope, Film, Gamepad2, Hammer, Lightbulb, PenTool, Drama, Building2, Cpu, Database, Wrench, Terminal, type LucideIcon } from "lucide-react";
 import { StatsHeader } from "@/components/StatsHeader";
 import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
+import { DailyQuestsPanel, bumpQuests } from "@/components/DailyQuestsPanel";
+import { LevelUpModal } from "@/components/LevelUpModal";
+import { emitXP } from "@/components/XPBurst";
+import { GridBackground } from "@/components/GridBackground";
+import { levelFromXp } from "@/hooks/useStats";
 import robotLogo from "@/assets/robot-logo.png";
 import { sfx } from "@/lib/sfx";
 
@@ -46,6 +51,8 @@ const Dashboard = () => {
   const [planLoading, setPlanLoading] = useState(false);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [confettiTick, setConfettiTick] = useState(0);
+  const [questTick, setQuestTick] = useState(0);
+  const [levelUp, setLevelUp] = useState<number | null>(null);
   const [lastReward, setLastReward] = useState<{ xp: number; correct: number; total: number } | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -236,12 +243,15 @@ const Dashboard = () => {
   };
 
   const handleQuizPass = async (correctCount: number) => {
-    if (!activePlan) return;
+    if (!activePlan || !user) return;
     const total = 5;
     const passed = correctCount >= 4;
     if (!passed) {
       setLastReward({ xp: 0, correct: correctCount, total });
-      toast({ title: "Almost there", description: `You got ${correctCount}/${total}. Try again to complete this module.` });
+      toast({ title: "Trial failed", description: `Score: ${correctCount}/${total}. Recalibrate and retry.` });
+      // still bump correct-answer quest
+      await bumpQuests(user.id, [{ type: "correct", amount: correctCount }]);
+      setQuestTick((t) => t + 1);
       setView("module");
       return;
     }
@@ -252,14 +262,26 @@ const Dashboard = () => {
       .update({ completed_modules: completed })
       .eq("id", activePlan.id);
     if (error) {
-      toast({ title: "Could not save progress", description: error.message, variant: "destructive" });
+      toast({ title: "Sync failure", description: error.message, variant: "destructive" });
       return;
     }
     setActivePlan({ ...activePlan, completed_modules: completed });
-    await awardXp(xp);
+    const prevLevel = stats ? levelFromXp(stats.xp).level : 0;
+    const next = await awardXp(xp);
+    const newLevel = next ? levelFromXp(next.xp).level : prevLevel;
+    emitXP(xp);
+    await bumpQuests(user.id, [
+      { type: "modules", amount: 1 },
+      { type: "xp", amount: xp },
+      { type: "correct", amount: correctCount },
+    ]);
+    setQuestTick((t) => t + 1);
     setLastReward({ xp, correct: correctCount, total });
     setConfettiTick((t) => t + 1);
     sfx.complete();
+    if (newLevel > prevLevel) {
+      setTimeout(() => setLevelUp(newLevel), 800);
+    }
     setView("moduleComplete");
   };
 
@@ -378,13 +400,16 @@ const Dashboard = () => {
   const currentModule = activePlan?.modules[activeModuleIndex];
 
   return (
-    <main className="min-h-screen bg-background">
-      <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
+    <main className="relative min-h-screen bg-background">
+      <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-card/90 backdrop-blur px-4 py-3">
         {view === "subjects" || view === "lesson" ? (
           view === "subjects" ? (
             <div className="flex items-center gap-2">
-              <img src={robotLogo} alt="AI Teacher logo" className="h-7 w-7 object-contain" />
-              <h1 className="font-semibold text-foreground">Your subjects</h1>
+              <img src={robotLogo} alt="ORACLE" className="h-7 w-7 object-contain drop-shadow-[0_0_8px_hsl(var(--primary)/0.6)]" />
+              <div>
+                <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-primary text-glow">Command Center</p>
+                <h1 className="font-mono text-sm font-bold uppercase tracking-wider text-foreground">Knowledge Domains</h1>
+              </div>
             </div>
           ) : (
             <Button variant="ghost" size="sm" onClick={goBack} className="gap-2 -ml-2">
@@ -411,69 +436,77 @@ const Dashboard = () => {
       <div className="mx-auto max-w-xl px-6 py-8">
         {/* SUBJECTS */}
         {view === "subjects" && (
-          <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
-            {subjectsLoading ? (
-              <>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
-              </>
-            ) : (
-              <>
-                {subjects.length === 0 && (
-                  <p className="py-8 text-center text-muted-foreground">
-                    No subjects yet. Create your first below.
-                  </p>
-                )}
-                {subjects.map((s) => {
-                  const total = s.total || 0;
-                  const completed = s.completed || 0;
-                  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-                  const { gradient, Icon } = subjectVisual(s.name);
-                  return (
-                    <button
-                      key={s.id}
-                      onClick={() => openSubject(s.id)}
-                      className="group flex w-full items-stretch gap-0 overflow-hidden rounded-2xl border border-border bg-card text-left shadow-sm transition-all hover:border-primary hover:shadow-md"
-                    >
-                      <div
-                        className="flex w-20 shrink-0 items-center justify-center text-white"
-                        style={{ background: gradient }}
-                        aria-hidden
+          <div className="animate-in fade-in slide-in-from-bottom-2">
+            <DailyQuestsPanel refreshKey={questTick} onClaimed={async (xp) => { await awardXp(xp); }} />
+
+            <div className="mb-3 flex items-center gap-2">
+              <Terminal className="h-3.5 w-3.5 text-primary" />
+              <p className="font-mono text-xs uppercase tracking-[0.2em] text-primary text-glow">// Active Domains</p>
+            </div>
+
+            <div className="space-y-2">
+              {subjectsLoading ? (
+                <>
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                </>
+              ) : (
+                <>
+                  {subjects.length === 0 && (
+                    <p className="py-6 text-center font-mono text-sm uppercase tracking-wider text-muted-foreground">
+                      &gt; NO DOMAINS ACQUIRED. INITIATE BELOW.
+                    </p>
+                  )}
+                  {subjects.map((s) => {
+                    const total = s.total || 0;
+                    const completed = s.completed || 0;
+                    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+                    const { gradient, Icon } = subjectVisual(s.name);
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => openSubject(s.id)}
+                        className="group flex w-full items-stretch gap-0 overflow-hidden rounded-sm border border-border bg-card text-left transition-all hover:border-primary hover:glow-primary"
                       >
-                        <Icon className="h-9 w-9 drop-shadow" strokeWidth={2} />
-                      </div>
-                      <div className="flex flex-1 items-center justify-between gap-3 p-4">
-                        <div className="min-w-0">
-                          <p className="truncate text-lg font-semibold text-foreground">{s.name}</p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {total > 0 ? `${completed} / ${total} modules` : "Lesson ready"}
-                            {pct > 0 && <span className="ml-2 font-medium text-primary">{pct}%</span>}
-                          </p>
-                        </div>
-                        <span className="shrink-0 text-muted-foreground transition-transform group-hover:translate-x-1">→</span>
-                      </div>
-                      {/* Vertical progress bar on the side */}
-                      <div className="relative w-2 shrink-0 bg-muted" aria-label={`${pct}% complete`}>
                         <div
-                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-primary/70 transition-all"
-                          style={{ height: `${pct}%` }}
-                        />
-                      </div>
-                    </button>
-                  );
-                })}
-              </>
-            )}
+                          className="flex w-20 shrink-0 items-center justify-center text-white"
+                          style={{ background: gradient }}
+                          aria-hidden
+                        >
+                          <Icon className="h-9 w-9 drop-shadow" strokeWidth={2} />
+                        </div>
+                        <div className="flex flex-1 items-center justify-between gap-3 p-4">
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-semibold text-foreground">{s.name}</p>
+                            <p className="mt-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+                              {total > 0 ? `${completed}/${total} PROTOCOLS` : "READY"}
+                              {pct > 0 && <span className="ml-2 text-primary text-glow">{pct}%</span>}
+                            </p>
+                          </div>
+                          <span className="shrink-0 font-mono text-primary transition-transform group-hover:translate-x-1">›</span>
+                        </div>
+                        <div className="relative w-1.5 shrink-0 bg-muted" aria-label={`${pct}% complete`}>
+                          <div
+                            className="absolute bottom-0 left-0 right-0 bg-primary transition-all"
+                            style={{ height: `${pct}%`, boxShadow: "0 0 8px hsl(var(--primary)/0.6)" }}
+                          />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </>
+              )}
+            </div>
 
             <Dialog open={newOpen} onOpenChange={setNewOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="mt-6 h-14 w-full gap-2 text-base font-semibold">
-                  <Plus className="h-5 w-5" /> New subject
+                <Button size="lg" className="mt-6 h-14 w-full gap-2 font-mono text-sm font-bold uppercase tracking-widest glow-primary">
+                  <Plus className="h-5 w-5" /> Acquire Domain
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>What do you want to learn?</DialogTitle>
+                  <DialogTitle className="font-mono uppercase tracking-wider">// Define Knowledge Domain</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleCreateSubject} className="space-y-4">
                   <Input
@@ -482,10 +515,10 @@ const Dashboard = () => {
                     value={newPrompt}
                     onChange={(e) => setNewPrompt(e.target.value)}
                     placeholder="e.g. Linear algebra for beginners"
-                    className="h-12 text-base"
+                    className="h-12 font-mono text-base"
                   />
-                  <Button type="submit" size="lg" className="w-full" disabled={creating}>
-                    {creating ? "Building lesson..." : "Create lesson"}
+                  <Button type="submit" size="lg" className="w-full font-mono uppercase tracking-wider" disabled={creating}>
+                    {creating ? "Compiling protocols..." : "Compile Domain"}
                   </Button>
                 </form>
               </DialogContent>
@@ -536,14 +569,14 @@ const Dashboard = () => {
                           {done ? <Check className="h-5 w-5" /> : locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Module {i + 1}
+                          <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            Protocol {String(i + 1).padStart(2, "0")}
                           </p>
                           <p className="font-semibold text-foreground">{m.title}</p>
                         </div>
                         {isCurrent && (
-                          <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                            Start
+                          <span className="rounded-sm bg-primary px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground glow-primary">
+                            Active
                           </span>
                         )}
                       </button>
@@ -618,16 +651,16 @@ const Dashboard = () => {
 
             <div className="mt-8 space-y-3">
               {!activePlan.completed_modules?.includes(activeModuleIndex) ? (
-                <Button size="lg" className="h-14 w-full gap-2 text-base font-bold" onClick={startQuiz}>
-                  <Play className="h-5 w-5" /> Start lesson
+                <Button size="lg" className="h-14 w-full gap-2 font-mono text-sm font-bold uppercase tracking-widest glow-primary" onClick={startQuiz}>
+                  <Play className="h-5 w-5" /> Initiate Trial
                 </Button>
               ) : (
-                <div className="flex items-center justify-center gap-2 rounded-2xl bg-green-500/10 py-3 text-sm font-semibold text-green-600 dark:text-green-400">
-                  <Check className="h-4 w-4" /> Module complete
+                <div className="flex items-center justify-center gap-2 rounded-sm border border-primary/40 bg-primary/10 py-3 font-mono text-xs uppercase tracking-widest text-primary text-glow">
+                  <Check className="h-4 w-4" /> Protocol Assimilated
                 </div>
               )}
-              <Button size="lg" variant="outline" className="h-12 w-full gap-2" onClick={openChat}>
-                Chat with teacher
+              <Button size="lg" variant="outline" className="h-12 w-full gap-2 font-mono uppercase tracking-wider" onClick={openChat}>
+                <Bot className="h-4 w-4" /> Consult ORACLE
               </Button>
             </div>
           </div>
@@ -651,10 +684,10 @@ const Dashboard = () => {
             <div className="mx-auto max-w-2xl space-y-3">
               {messages.length === 0 && !streaming && (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10">
+                  <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-sm border border-primary/40 bg-primary/5 glow-primary">
                     <Bot className="h-[75px] w-[100px] text-primary" />
                   </div>
-                  <p className="mt-6 text-lg text-foreground">Ask anything about this module.</p>
+                  <p className="mt-6 font-mono text-sm uppercase tracking-widest text-primary text-glow">ORACLE STANDS READY.</p>
                 </div>
               )}
               {messages.map((m) => (
@@ -736,15 +769,16 @@ const Dashboard = () => {
       {/* NO HEARTS */}
       {view === "noHearts" && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-500/10">
-            <Heart className="h-10 w-10 text-red-500" />
+          <GridBackground />
+          <div className="relative panel glow-accent flex h-20 w-20 items-center justify-center rounded-sm">
+            <Heart className="h-10 w-10 text-accent text-glow-accent" />
           </div>
-          <h2 className="mt-6 text-2xl font-bold text-foreground">Out of hearts</h2>
-          <p className="mt-2 max-w-sm text-center text-muted-foreground">
-            You'll get a heart back every 30 minutes. Come back soon to keep learning.
+          <h2 className="relative mt-6 font-mono text-2xl font-bold uppercase tracking-widest text-accent text-glow-accent">SYSTEM DEPLETED</h2>
+          <p className="relative mt-2 max-w-sm text-center text-sm text-muted-foreground">
+            Hearts regenerate every 30 minutes. Return when your matrix has recovered.
           </p>
-          <Button size="lg" className="mt-8 h-14 px-8 text-base font-bold" onClick={() => setView("lesson")}>
-            Back to lessons
+          <Button size="lg" className="relative mt-8 h-14 px-8 font-mono uppercase tracking-widest" onClick={() => setView("lesson")}>
+            Return
           </Button>
         </div>
       )}
@@ -752,25 +786,30 @@ const Dashboard = () => {
       {/* MODULE COMPLETE celebration */}
       {view === "moduleComplete" && lastReward && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background px-6 animate-in fade-in">
-          <div className="flex h-24 w-24 animate-pop items-center justify-center rounded-full bg-primary/10">
-            <Trophy className="h-12 w-12 text-primary" />
+          <GridBackground />
+          <div className="relative panel glow-primary flex h-24 w-24 animate-pop items-center justify-center rounded-sm">
+            <Trophy className="h-12 w-12 text-primary text-glow" />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-foreground">Module complete!</h2>
-          <p className="mt-2 text-muted-foreground">{lastReward.correct} of {lastReward.total} correct</p>
-          <div className="mt-6 flex items-center gap-2 rounded-full bg-primary/10 px-5 py-2 text-lg font-bold text-primary">
+          <p className="relative mt-6 font-mono text-xs uppercase tracking-[0.4em] text-primary text-glow">// PROTOCOL COMPLETE //</p>
+          <h2 className="relative mt-2 font-mono text-3xl font-bold uppercase tracking-widest text-foreground">Domain Assimilated</h2>
+          <p className="relative mt-2 font-mono text-sm text-muted-foreground">
+            ACCURACY: {lastReward.correct}/{lastReward.total}
+          </p>
+          <div className="relative mt-6 flex items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-5 py-2 font-mono text-lg font-bold uppercase tracking-wider text-primary text-glow animate-pulse-glow">
             <Sparkles className="h-5 w-5" /> +{lastReward.xp} XP
           </div>
           <Button
             size="lg"
-            className="mt-10 h-14 px-8 text-base font-bold"
+            className="relative mt-10 h-14 px-8 font-mono uppercase tracking-widest glow-primary"
             onClick={() => { setLastReward(null); setView("lesson"); }}
           >
-            Continue
+            Proceed
           </Button>
         </div>
       )}
 
       <Confetti trigger={confettiTick} />
+      <LevelUpModal level={levelUp} onClose={() => setLevelUp(null)} />
     </main>
   );
 };

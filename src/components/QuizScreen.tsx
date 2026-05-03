@@ -174,7 +174,7 @@ export const QuizScreen = ({
             <div className="space-y-4 pt-12">
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Sparkles className="h-5 w-5 animate-pulse text-primary" />
-                <p>Building your quiz…</p>
+                <p className="font-mono uppercase tracking-wider">Compiling trial…</p>
               </div>
               <Skeleton className="h-8 w-3/4" />
               <Skeleton className="h-16 w-full" />
@@ -269,14 +269,14 @@ export const QuizScreen = ({
         <div className="mx-auto max-w-xl">
           {phase === "checked" && (
             <div className="mb-3 flex items-start gap-2">
-              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                wasCorrect ? "bg-green-500 text-white" : "bg-red-500 text-white"
+              <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-sm ${
+                wasCorrect ? "bg-primary text-primary-foreground" : "bg-accent text-accent-foreground"
               }`}>
                 {wasCorrect ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
               </div>
               <div>
-                <p className={`font-bold ${wasCorrect ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
-                  {wasCorrect ? "Nice!" : "Not quite"}
+                <p className={`font-mono uppercase tracking-wider ${wasCorrect ? "text-primary text-glow" : "text-accent text-glow-accent"}`}>
+                  {wasCorrect ? "Correct" : "Negative"}
                 </p>
                 {feedback && <p className="text-sm text-foreground/80">{feedback}</p>}
               </div>
@@ -285,21 +285,21 @@ export const QuizScreen = ({
           {phase === "answering" ? (
             <Button
               size="lg"
-              className="h-14 w-full text-base font-bold"
+              className="h-14 w-full font-mono text-base font-bold uppercase tracking-widest glow-primary"
               disabled={!canCheck || grading || loading}
               onClick={handleCheck}
             >
-              {grading ? "Grading…" : "Check"}
+              {grading ? "Analyzing…" : "Execute"}
             </Button>
           ) : (
             <Button
               size="lg"
-              className={`h-14 w-full text-base font-bold ${
-                wasCorrect ? "bg-green-500 hover:bg-green-500/90 text-white" : "bg-red-500 hover:bg-red-500/90 text-white"
+              className={`h-14 w-full font-mono text-base font-bold uppercase tracking-widest ${
+                wasCorrect ? "bg-primary hover:bg-primary/90 text-primary-foreground glow-primary" : "bg-accent hover:bg-accent/90 text-accent-foreground glow-accent"
               }`}
               onClick={handleContinue}
             >
-              {idx + 1 >= questions.length ? "Finish" : "Continue"}
+              {idx + 1 >= questions.length ? "Finalize" : "Proceed"}
             </Button>
           )}
         </div>
