@@ -51,6 +51,8 @@ const Dashboard = () => {
   const [planLoading, setPlanLoading] = useState(false);
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [confettiTick, setConfettiTick] = useState(0);
+  const [questTick, setQuestTick] = useState(0);
+  const [levelUp, setLevelUp] = useState<number | null>(null);
   const [lastReward, setLastReward] = useState<{ xp: number; correct: number; total: number } | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
