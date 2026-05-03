@@ -651,16 +651,16 @@ const Dashboard = () => {
 
             <div className="mt-8 space-y-3">
               {!activePlan.completed_modules?.includes(activeModuleIndex) ? (
-                <Button size="lg" className="h-14 w-full gap-2 text-base font-bold" onClick={startQuiz}>
-                  <Play className="h-5 w-5" /> Start lesson
+                <Button size="lg" className="h-14 w-full gap-2 font-mono text-sm font-bold uppercase tracking-widest glow-primary" onClick={startQuiz}>
+                  <Play className="h-5 w-5" /> Initiate Trial
                 </Button>
               ) : (
-                <div className="flex items-center justify-center gap-2 rounded-2xl bg-green-500/10 py-3 text-sm font-semibold text-green-600 dark:text-green-400">
-                  <Check className="h-4 w-4" /> Module complete
+                <div className="flex items-center justify-center gap-2 rounded-sm border border-primary/40 bg-primary/10 py-3 font-mono text-xs uppercase tracking-widest text-primary text-glow">
+                  <Check className="h-4 w-4" /> Protocol Assimilated
                 </div>
               )}
-              <Button size="lg" variant="outline" className="h-12 w-full gap-2" onClick={openChat}>
-                Chat with teacher
+              <Button size="lg" variant="outline" className="h-12 w-full gap-2 font-mono uppercase tracking-wider" onClick={openChat}>
+                <Bot className="h-4 w-4" /> Consult ORACLE
               </Button>
             </div>
           </div>
