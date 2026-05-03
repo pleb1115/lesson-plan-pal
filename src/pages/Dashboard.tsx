@@ -243,12 +243,15 @@ const Dashboard = () => {
   };
 
   const handleQuizPass = async (correctCount: number) => {
-    if (!activePlan) return;
+    if (!activePlan || !user) return;
     const total = 5;
     const passed = correctCount >= 4;
     if (!passed) {
       setLastReward({ xp: 0, correct: correctCount, total });
-      toast({ title: "Almost there", description: `You got ${correctCount}/${total}. Try again to complete this module.` });
+      toast({ title: "Trial failed", description: `Score: ${correctCount}/${total}. Recalibrate and retry.` });
+      // still bump correct-answer quest
+      await bumpQuests(user.id, [{ type: "correct", amount: correctCount }]);
+      setQuestTick((t) => t + 1);
       setView("module");
       return;
     }
@@ -259,14 +262,26 @@ const Dashboard = () => {
       .update({ completed_modules: completed })
       .eq("id", activePlan.id);
     if (error) {
-      toast({ title: "Could not save progress", description: error.message, variant: "destructive" });
+      toast({ title: "Sync failure", description: error.message, variant: "destructive" });
       return;
     }
     setActivePlan({ ...activePlan, completed_modules: completed });
-    await awardXp(xp);
+    const prevLevel = stats ? levelFromXp(stats.xp).level : 0;
+    const next = await awardXp(xp);
+    const newLevel = next ? levelFromXp(next.xp).level : prevLevel;
+    emitXP(xp);
+    await bumpQuests(user.id, [
+      { type: "modules", amount: 1 },
+      { type: "xp", amount: xp },
+      { type: "correct", amount: correctCount },
+    ]);
+    setQuestTick((t) => t + 1);
     setLastReward({ xp, correct: correctCount, total });
     setConfettiTick((t) => t + 1);
     sfx.complete();
+    if (newLevel > prevLevel) {
+      setTimeout(() => setLevelUp(newLevel), 800);
+    }
     setView("moduleComplete");
   };
 
