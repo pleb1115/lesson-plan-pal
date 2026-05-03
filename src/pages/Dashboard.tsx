@@ -9,10 +9,15 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, Brain, GraduationCap, Briefcase, Scale, Gavel, Stethoscope, Leaf, Microscope, Film, Gamepad2, Hammer, Lightbulb, PenTool, Drama, Building2, Cpu, Database, Wrench, type LucideIcon } from "lucide-react";
+import { ArrowLeft, BookOpen, Plus, LogOut, Send, Bot, Check, Lock, Play, Youtube, ExternalLink, Heart, Trophy, Sparkles, Calculator, Atom, FlaskConical, Dna, ScrollText, Globe, Code, Palette, Music, Languages, ChefHat, Rocket, Dumbbell, DollarSign, Camera, Brain, GraduationCap, Briefcase, Scale, Gavel, Stethoscope, Leaf, Microscope, Film, Gamepad2, Hammer, Lightbulb, PenTool, Drama, Building2, Cpu, Database, Wrench, Terminal, type LucideIcon } from "lucide-react";
 import { StatsHeader } from "@/components/StatsHeader";
 import { QuizScreen } from "@/components/QuizScreen";
 import { Confetti } from "@/components/Confetti";
+import { DailyQuestsPanel, bumpQuests } from "@/components/DailyQuestsPanel";
+import { LevelUpModal } from "@/components/LevelUpModal";
+import { emitXP } from "@/components/XPBurst";
+import { GridBackground } from "@/components/GridBackground";
+import { levelFromXp } from "@/hooks/useStats";
 import robotLogo from "@/assets/robot-logo.png";
 import { sfx } from "@/lib/sfx";
 
