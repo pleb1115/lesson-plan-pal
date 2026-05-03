@@ -569,14 +569,14 @@ const Dashboard = () => {
                           {done ? <Check className="h-5 w-5" /> : locked ? <Lock className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                         </div>
                         <div className="flex-1">
-                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                            Module {i + 1}
+                          <p className="font-mono text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                            Protocol {String(i + 1).padStart(2, "0")}
                           </p>
                           <p className="font-semibold text-foreground">{m.title}</p>
                         </div>
                         {isCurrent && (
-                          <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">
-                            Start
+                          <span className="rounded-sm bg-primary px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-primary-foreground glow-primary">
+                            Active
                           </span>
                         )}
                       </button>
