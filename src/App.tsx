@@ -8,6 +8,9 @@ import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CRTOverlay } from "@/components/CRTOverlay";
+import { BootSequence } from "@/components/BootSequence";
+import { XPBurst } from "@/components/XPBurst";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +21,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <BootSequence />
+          <CRTOverlay />
+          <XPBurst />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
